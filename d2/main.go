@@ -26,7 +26,7 @@ func lineSafe(line string) bool {
 
 	// check all lists with one element knocked out
 	for i := 0; i < len(nums); i++ {
-		check := safeDel(nums, i)
+		check := lib.SafeDel(nums, i)
 		if diffSafe(diffs(check)) {
 			return true
 		}
@@ -63,11 +63,4 @@ func diffs(nums []int) []int {
 	}
 
 	return diffs
-}
-
-func safeDel(nums []int, i int) []int {
-	res := make([]int, len(nums)-1)
-	n := copy(res, nums[:i])
-	copy(res[n:], nums[i+1:])
-	return res
 }

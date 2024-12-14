@@ -78,3 +78,10 @@ func Abs(i int) int {
 
 	return i
 }
+
+func SafeDel[V any](vs []V, i int) []V {
+	res := make([]V, len(vs)-1)
+	n := copy(res, vs[:i])
+	copy(res[n:], vs[i+1:])
+	return res
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"iter"
+	"sort"
 	"strings"
 
 	"aoc24/lib"
@@ -13,92 +14,43 @@ func main() {
 	input := parseInput(lines)
 
 	var total int
-	invalid := make([][]int, 0)
+	var totalFixed int
 	for _, update := range input.updates {
-		if !validUpdate(update, input.rules) {
-			invalid = append(invalid, update)
+		toSort := &sortUpdate{
+			nums:  update,
+			rules: input.rules,
+		}
+
+		if !sort.IsSorted(toSort) {
+			sort.Sort(toSort)
+			mid := toSort.nums[len(toSort.nums)/2]
+			totalFixed += mid
 			continue
 		}
 
-		mid := update[len(update)/2]
+		mid := toSort.nums[len(toSort.nums)/2]
 		total += mid
 	}
-	fmt.Printf("part one: %d\n", total)
-
-	total = 0
-	for _, update := range invalid {
-		fixed := fixUpdate(update, input.rules)
-
-		mid := fixed[len(fixed)/2]
-		total += mid
-	}
-
-	fmt.Printf("part two: %d\n", total)
+	fmt.Printf("part one: %d\npart two: %d", total, totalFixed)
 }
 
-func validUpdate(update []int, rules map[int]map[int]struct{}) bool {
-	seen := map[int]struct{}{}
-	for _, n := range update {
-		seen[n] = struct{}{}
-
-		rulesForN, ok := rules[n]
-		if !ok {
-			// no rules for this number
-			continue
-		}
-
-		for rule := range rulesForN {
-			if _, ok := seen[rule]; ok {
-				// fmt.Printf("update: %+v\ninvalid due to %d happens before %d rule\n", update, n, rule)
-				return false
-			}
-		}
-	}
-
-	return true
+type sortUpdate struct {
+	nums  []int
+	rules map[int]map[int]struct{}
 }
 
-func fixUpdate(update []int, rules map[int]map[int]struct{}) []int {
-	// we only need to move elements left
-	// but we also need to backtrack when we shift elements left
-	seenAt := map[int]int{}
-	for i := 0; i < len(update); i++ {
-		n := update[i]
-		seenAt[n] = i
+func (u *sortUpdate) Len() int {
+	return len(u.nums)
+}
 
-		rulesForN, ok := rules[n]
-		if !ok {
-			// no rules for this number
-			continue
-		}
+func (u *sortUpdate) Less(i, j int) bool {
+	a, b := u.nums[i], u.nums[j]
+	_, ok := u.rules[a][b] // if j appears in the rules for i, i should come before j
+	return ok
+}
 
-		moveTo := i
-		for rule := range rulesForN {
-			if at, ok := seenAt[rule]; ok && at < moveTo {
-				// found a bad element
-				// move to the index where we saw the rule, shifting everything already there right
-				moveTo = at
-			}
-		}
-
-		if moveTo == i {
-			continue
-		}
-
-		// insert n at index moveTo
-		update = append(update[:moveTo], append([]int{n}, update[moveTo:]...)...)
-		// we now know the original n value exists at i+1, let's delete it
-		update = append(update[:i+1], update[i+2:]...)
-		// now anything between moveTo+1 and i has not been seen before (i because we just cut one element out)
-		for _, v := range update[moveTo+1 : i+1] {
-			delete(seenAt, v)
-		}
-		seenAt[n] = moveTo
-		// and we finally need to reset i to continue from the next element at the end of this iteration
-		i = moveTo
-	}
-
-	return update
+func (u *sortUpdate) Swap(i, j int) {
+	u.nums[i], u.nums[j] = u.nums[j], u.nums[i]
 }
 
 type input struct {

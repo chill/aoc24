@@ -15,7 +15,7 @@ func main() {
 	rightCounts := map[int]int{}
 
 	for line := range lines {
-		ints := lib.Ints(line)
+		ints := lib.IntsWords(line)
 		left = append(left, ints[0])
 		right = append(right, ints[1])
 		rightCounts[ints[1]]++

@@ -19,15 +19,11 @@ func main() {
 }
 
 func lineSafe(line string) bool {
-	nums := lib.Ints(line)
-	if diffSafe(diffs(nums)) {
-		return true
-	}
+	nums := lib.IntsWords(line)
 
-	// check all lists with one element knocked out
-	for i := 0; i < len(nums); i++ {
-		check := lib.SafeDel(nums, i)
-		if diffSafe(diffs(check)) {
+	// check all lists with one element knocked out, starting with skip at -1 (no skip)
+	for skip := -1; skip < len(nums); skip++ {
+		if diffSafe(diffs(nums, skip)) {
 			return true
 		}
 	}
@@ -52,10 +48,22 @@ func diffSafe(diffs []int) bool {
 	return true
 }
 
-func diffs(nums []int) []int {
-	prev := nums[0]
+// skip below 0 has no effect in this logic
+func diffs(nums []int, skip int) []int {
+	start := 0
+	if skip == 0 && len(nums) == 1 {
+		panic("cannot skip index 0 in 1-length slice")
+	} else if skip == 0 {
+		start = 1
+	}
+
+	prev := nums[start]
 	diffs := make([]int, 0, 2)
-	for i := 1; i < len(nums); i++ {
+	for i := start + 1; i < len(nums); i++ {
+		if i == skip {
+			continue
+		}
+
 		curr := nums[i]
 		diff := curr - prev
 		prev = curr

@@ -3,12 +3,14 @@ package lib
 import (
 	"bufio"
 	"io"
+	"iter"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
 
-func ByLines(path string) <-chan string {
+func ByLines(path string) iter.Seq[string] {
 	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -17,34 +19,52 @@ func ByLines(path string) <-chan string {
 	return scan(f, bufio.ScanLines, stringer)
 }
 
+func StringLines(s string) iter.Seq[string] {
+	return scan(strings.NewReader(s), bufio.ScanLines, stringer)
+}
+
 func Lines(path string) []string {
-	return acc(ByLines(path))
+	return slices.Collect(ByLines(path))
 }
 
 func Words(line string) []string {
-	return acc(scan(strings.NewReader(line), bufio.ScanWords, stringer))
+	return slices.Collect(scan(strings.NewReader(line), bufio.ScanWords, stringer))
 }
 
-func Ints(line string) []int {
-	return acc(scan(strings.NewReader(line), bufio.ScanWords, inter))
+func Runes(line string) []rune {
+	return slices.Collect(scan(strings.NewReader(line), bufio.ScanRunes, runer))
 }
 
-func scan[V any](r io.Reader, splitFunc bufio.SplitFunc, convert func(s string) V) <-chan V {
+func IntsWords(line string) []int {
+	return slices.Collect(scan(strings.NewReader(line), bufio.ScanWords, inter))
+}
+
+func IntsSlice(words []string) []int {
+	return convSlice(words, inter)
+}
+
+func convSlice[V any, B any](in []V, conv func(V) B) []B {
+	res := make([]B, len(in))
+	for i, val := range in {
+		res[i] = conv(val)
+	}
+	return res
+}
+
+func scan[V any](r io.Reader, splitFunc bufio.SplitFunc, convert func(s string) V) iter.Seq[V] {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(splitFunc)
 
-	res := make(chan V, 10)
-	go func() {
+	return func(yield func(V) bool) {
 		for scanner.Scan() {
-			res <- convert(scanner.Text())
+			if !yield(convert(scanner.Text())) {
+				return
+			}
 		}
 		if scanner.Err() != nil {
 			panic(scanner.Err())
 		}
-		close(res)
-	}()
-
-	return res
+	}
 }
 
 func stringer(s string) string {
@@ -55,12 +75,8 @@ func inter(s string) int {
 	return Atoi(s)
 }
 
-func acc[V any](ch <-chan V) []V {
-	res := make([]V, 0)
-	for e := range ch {
-		res = append(res, e)
-	}
-	return res
+func runer(s string) rune {
+	return []rune(s)[0]
 }
 
 func Atoi(s string) int {

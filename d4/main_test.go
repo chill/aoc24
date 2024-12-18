@@ -19,7 +19,7 @@ MXMXAXMASX`
 
 func TestExample(t *testing.T) {
 	const expectXmas = 18
-	matrix := buildMatrix(lib.StringLines(example))
+	matrix := lib.BuildMatrix(lib.StringLines(example), lib.Runes)
 	if res := xmasSearch(matrix); res != expectXmas {
 		t.Errorf("expected %d XMAS got %d", expectXmas, res)
 	}

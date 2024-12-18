@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"iter"
+	"maps"
 	"os"
 	"slices"
 	"strconv"
@@ -32,7 +33,7 @@ func Words(line string) []string {
 }
 
 func Runes(line string) []rune {
-	return slices.Collect(scan(strings.NewReader(line), bufio.ScanRunes, runer))
+	return slices.Collect(slices.Values([]rune(line)))
 }
 
 func IntsWords(line string) []int {
@@ -40,10 +41,10 @@ func IntsWords(line string) []int {
 }
 
 func IntsSlice(words []string) []int {
-	return convSlice(words, inter)
+	return ConvSlice(words, inter)
 }
 
-func convSlice[V any, B any](in []V, conv func(V) B) []B {
+func ConvSlice[V any, B any](in []V, conv func(V) B) []B {
 	res := make([]B, len(in))
 	for i, val := range in {
 		res[i] = conv(val)
@@ -75,10 +76,6 @@ func inter(s string) int {
 	return Atoi(s)
 }
 
-func runer(s string) rune {
-	return []rune(s)[0]
-}
-
 func Atoi(s string) int {
 	v, err := strconv.Atoi(s)
 	if err != nil {
@@ -100,4 +97,59 @@ func SafeDel[V any](vs []V, i int) []V {
 	n := copy(res, vs[:i])
 	copy(res[n:], vs[i+1:])
 	return res
+}
+
+func InBounds[G any](y, x int, m [][]G) bool {
+	return y >= 0 && x >= 0 && y < len(m) && x < len(m[0])
+}
+
+func BuildMatrix[V any](lines iter.Seq[string], conv func(string) []V) [][]V {
+	matrix := make([][]V, 0)
+	for line := range lines {
+		matrix = append(matrix, conv(line))
+	}
+
+	return matrix
+}
+
+type Set[V comparable] map[V]struct{}
+
+func NewSet[V comparable](vals ...V) Set[V] {
+	s := Set[V]{}
+	s.Add(vals...)
+	return s
+}
+
+func (s Set[V]) Add(vals ...V) {
+	for _, v := range vals {
+		s[v] = struct{}{}
+	}
+}
+
+func (s Set[V]) Contains(vals ...V) bool {
+	contained := true
+	for _, v := range vals {
+		_, ok := s[v]
+		contained = contained && ok
+	}
+
+	return contained
+}
+
+func (s Set[V]) Delete(vals ...V) {
+	for _, v := range vals {
+		delete(s, v)
+	}
+}
+
+func (s Set[V]) Equals(other Set[V]) bool {
+	if len(s) != len(other) {
+		return false
+	}
+
+	return s.Contains(slices.Collect(maps.Keys(other))...)
+}
+
+func (s Set[V]) Values() iter.Seq[V] {
+	return maps.Keys(s)
 }

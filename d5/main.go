@@ -31,7 +31,7 @@ func main() {
 		mid := toSort.nums[len(toSort.nums)/2]
 		total += mid
 	}
-	fmt.Printf("part one: %d\npart two: %d", total, totalFixed)
+	fmt.Printf("part one: %d\npart two: %d\n", total, totalFixed)
 }
 
 type sortUpdate struct {

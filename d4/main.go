@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"iter"
 
 	"aoc24/lib"
 )
 
 func main() {
 	lines := lib.ByLines("./input.txt")
-	matrix := buildMatrix(lines)
+	matrix := lib.BuildMatrix(lines, lib.Runes)
 	words := xmasSearch(matrix)
 	crosses := crossSearch(matrix)
 	fmt.Printf("got %d occurences of XMAS, %d occurences of X-MAS\n", words, crosses)
@@ -54,7 +53,7 @@ func checkCross(y, x int, matrix [][]rune) int {
 			newY := y + diffY
 			newX := x + diffX
 
-			if !inBounds(newY, newX, matrix) {
+			if !lib.InBounds(newY, newX, matrix) {
 				return 0
 			}
 
@@ -117,7 +116,7 @@ func checkLine(y, x, diffY, diffX int, matrix [][]rune, target []rune) bool {
 	for i, r := range target {
 		newY := y + diffY*(i+1)
 		newX := x + diffX*(i+1)
-		if !inBounds(newY, newX, matrix) {
+		if !lib.InBounds(newY, newX, matrix) {
 			return false
 		}
 
@@ -127,17 +126,4 @@ func checkLine(y, x, diffY, diffX int, matrix [][]rune, target []rune) bool {
 	}
 
 	return true
-}
-
-func inBounds(y, x int, m [][]rune) bool {
-	return y >= 0 && x >= 0 && y < len(m) && x < len(m[0])
-}
-
-func buildMatrix(lines iter.Seq[string]) [][]rune {
-	matrix := make([][]rune, 0)
-	for line := range lines {
-		matrix = append(matrix, lib.Runes(line))
-	}
-
-	return matrix
 }

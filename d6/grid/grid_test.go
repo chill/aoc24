@@ -59,3 +59,10 @@ func TestParseGrid(t *testing.T) {
 		t.Errorf("expected 41 positions to be visited, got %d", res)
 	}
 }
+
+func TestPart1(t *testing.T) {
+	res := Walk(Parse(lib.ByLines("../input.txt")))
+	if res != 5318 {
+		t.Errorf("expected 5318 positions to be visited, got %d", res)
+	}
+}

@@ -10,5 +10,7 @@ import (
 func main() {
 	lines := lib.ByLines("./input.txt")
 	gr := grid.Parse(lines)
-	fmt.Println(grid.Walk(gr))
+	walked := grid.Walk(gr)
+	fmt.Println(len(walked))
+	fmt.Println(len(grid.FindCycles(gr, walked)))
 }

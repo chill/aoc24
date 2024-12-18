@@ -6,15 +6,64 @@ import (
 	"aoc24/lib"
 )
 
-func Walk(g *grid) int {
-	visited := 1
+func Walk(g *grid) lib.Set[coord] {
+	nodes := lib.NewSet[node]()
+	visited := lib.NewSet[coord]()
+	hatStart, hatDir := g.hat, g.hatDir
 	bounds := true
 	for bounds {
-		walked, inBounds := g.walkHat()
-		visited += walked
+		walked, inBounds, cycle := g.walkHat(nodes)
+		if cycle {
+			panic("cycle detected")
+		}
+
+		nodes.Add(walked...)
+		for _, n := range walked {
+			visited.Add(n.c)
+		}
 		bounds = inBounds
 	}
+
+	g.reset(hatStart, hatDir)
 	return visited
+}
+
+func FindCycles(g *grid, walked lib.Set[coord]) lib.Set[coord] {
+	// assume fresh grid, zeroed
+	startHat, startDir := g.hat, g.hatDir
+	cycles := lib.NewSet[coord]()
+	nodes := lib.NewSet[node]()
+	for c := range walked.Values() {
+		if c == g.hat {
+			// don't put a block on the start tile
+			continue
+		}
+
+		// add the new block in
+		g.blocks.Add(c)
+		oldV := g.g[c.Y][c.X].val
+		g.g[c.Y][c.X].val = '#'
+
+		bounds := true
+		iter := 0
+		for bounds {
+			visited, inBounds, cycle := g.walkHat(nodes)
+			iter++
+			if cycle {
+				cycles.Add(c)
+				break
+			}
+			nodes.Add(visited...)
+			bounds = inBounds
+		}
+
+		g.blocks.Delete(c)
+		g.g[c.Y][c.X].val = oldV
+		g.reset(startHat, startDir)
+		nodes = lib.NewSet[node]()
+	}
+
+	return cycles
 }
 
 func Parse(lines iter.Seq[string]) *grid {
@@ -86,31 +135,60 @@ type grid struct {
 }
 
 // walkHat walks the hat in hatDir until it hits a blocker or the edge
-// it returns the number of tiles walked, and whether the hat stays in bounds
-func (g *grid) walkHat() (int, bool) {
+// it returns the number of tiles walked, whether the hat stays in bounds, and if a cycle was detected
+func (g *grid) walkHat(cycleCheck lib.Set[node]) ([]node, bool, bool) {
 	prev := g.hat
-	visited := 0
+	visited := []node{
+		{
+			c: g.hat,
+			d: g.hatDir,
+		},
+	}
+
 	for {
 		current := addCoords(prev, g.hatDir)
 		if !lib.InBounds(current.Y, current.X, g.g) {
 			g.hat = prev
-			return visited, false
+			return visited, false, false
+		}
+
+		n := node{
+			c: current,
+			d: g.hatDir,
+		}
+		if cycleCheck.Contains(n) {
+			// been here before in this direction, cycle
+			return visited, false, true
 		}
 
 		if g.blocks.Contains(current) {
 			g.hat = prev
 			g.hatDir = quarterTurn(g.hatDir, true)
-			return visited, true
+			return visited, true, false
 		}
 
-		if !g.g[current.Y][current.X].visited {
-			visited++
-			g.g[current.Y][current.X].visited = true
-		}
+		visited = append(visited, node{
+			c: current,
+			d: g.hatDir,
+		})
 
 		prev = current
 		// loop will always terminate because we will always hit grid-edge in the worst case
 	}
+}
+
+func (g *grid) reset(h, d coord) {
+	// reset the grid
+	lib.ApplyMatrix(g.g, func(p pos) pos {
+		return pos{
+			val:     p.val,
+			visited: false,
+		}
+	})
+
+	g.g[h.Y][h.X].visited = true
+	g.hat = h
+	g.hatDir = d
 }
 
 type coord struct {
@@ -139,6 +217,11 @@ func addCoords(c, d coord) coord {
 		Y: c.Y + d.Y,
 		X: c.X + d.X,
 	}
+}
+
+type node struct {
+	c coord
+	d coord
 }
 
 type pos struct {

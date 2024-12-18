@@ -55,14 +55,20 @@ func TestParseGrid(t *testing.T) {
 		t.Errorf("expected blocks %+v, got %+v", expectBlocks, g.blocks)
 	}
 
-	if res := Walk(g); res != 41 {
-		t.Errorf("expected 41 positions to be visited, got %d", res)
+	walked := Walk(g)
+	if len(walked) != 41 {
+		t.Errorf("expected 41 positions to be visited, got %d", len(walked))
+	}
+
+	cyclesAt := FindCycles(g, walked)
+	if len(cyclesAt) != 6 {
+		t.Errorf("expected 6 positions to generate cycles, got %d", len(cyclesAt))
 	}
 }
 
 func TestPart1(t *testing.T) {
 	res := Walk(Parse(lib.ByLines("../input.txt")))
-	if res != 5318 {
-		t.Errorf("expected 5318 positions to be visited, got %d", res)
+	if len(res) != 5318 {
+		t.Errorf("expected 5318 positions to be visited, got %d", len(res))
 	}
 }

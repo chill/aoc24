@@ -112,6 +112,14 @@ func BuildMatrix[V any](lines iter.Seq[string], conv func(string) []V) [][]V {
 	return matrix
 }
 
+func ApplyMatrix[V any](m [][]V, fn func(V) V) {
+	for _, r := range m {
+		for i, v := range r {
+			r[i] = fn(v)
+		}
+	}
+}
+
 type Set[V comparable] map[V]struct{}
 
 func NewSet[V comparable](vals ...V) Set[V] {

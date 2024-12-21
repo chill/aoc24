@@ -6,9 +6,9 @@ import (
 	"aoc24/lib"
 )
 
-func Walk(g *grid) lib.Set[coord] {
+func Walk(g *grid) lib.Set[lib.Vec] {
 	nodes := lib.NewSet[node]()
-	visited := lib.NewSet[coord]()
+	visited := lib.NewSet[lib.Vec]()
 	hatStart, hatDir := g.hat, g.hatDir
 	bounds := true
 	for bounds {
@@ -28,10 +28,10 @@ func Walk(g *grid) lib.Set[coord] {
 	return visited
 }
 
-func FindCycles(g *grid, walked lib.Set[coord]) lib.Set[coord] {
+func FindCycles(g *grid, walked lib.Set[lib.Vec]) lib.Set[lib.Vec] {
 	// assume fresh grid, zeroed
 	startHat, startDir := g.hat, g.hatDir
-	cycles := lib.NewSet[coord]()
+	cycles := lib.NewSet[lib.Vec]()
 	nodes := lib.NewSet[node]()
 	for c := range walked.Values() {
 		if c == g.hat {
@@ -69,7 +69,7 @@ func FindCycles(g *grid, walked lib.Set[coord]) lib.Set[coord] {
 func Parse(lines iter.Seq[string]) *grid {
 	res := &grid{
 		g:      make([][]pos, 0),
-		blocks: lib.NewSet[coord](),
+		blocks: lib.NewSet[lib.Vec](),
 	}
 
 	var lineCount int
@@ -85,7 +85,7 @@ func Parse(lines iter.Seq[string]) *grid {
 				visited = true
 				res.hatDir = buildDir(v)
 			case '#':
-				res.blocks.Add(coord{
+				res.blocks.Add(lib.Vec{
 					Y: lineCount,
 					X: xCount,
 				})
@@ -106,8 +106,8 @@ func Parse(lines iter.Seq[string]) *grid {
 	return res
 }
 
-func buildDir(r rune) coord {
-	var res coord
+func buildDir(r rune) lib.Vec {
+	var res lib.Vec
 	switch r {
 	case '^':
 		res.Y = -1
@@ -128,10 +128,10 @@ func buildDir(r rune) coord {
 }
 
 type grid struct {
-	g      [][]pos
-	hat    coord
-	hatDir coord // not really a coord, actually dy,dx
-	blocks lib.Set[coord]
+	g      lib.Matrix[pos]
+	hat    lib.Vec
+	hatDir lib.Vec // not really a lib.Vec, actually dy,dx
+	blocks lib.Set[lib.Vec]
 }
 
 // walkHat walks the hat in hatDir until it hits a blocker or the edge
@@ -146,8 +146,9 @@ func (g *grid) walkHat(cycleCheck lib.Set[node]) ([]node, bool, bool) {
 	}
 
 	for {
-		current := addCoords(prev, g.hatDir)
-		if !lib.InBounds(current.Y, current.X, g.g) {
+		current := prev.Add(g.hatDir)
+
+		if !g.g.InBounds(current.Y, current.X) {
 			g.hat = prev
 			return visited, false, false
 		}
@@ -163,7 +164,7 @@ func (g *grid) walkHat(cycleCheck lib.Set[node]) ([]node, bool, bool) {
 
 		if g.blocks.Contains(current) {
 			g.hat = prev
-			g.hatDir = quarterTurn(g.hatDir, true)
+			g.hatDir = lib.QuarterTurn(g.hatDir, true)
 			return visited, true, false
 		}
 
@@ -177,9 +178,9 @@ func (g *grid) walkHat(cycleCheck lib.Set[node]) ([]node, bool, bool) {
 	}
 }
 
-func (g *grid) reset(h, d coord) {
+func (g *grid) reset(h, d lib.Vec) {
 	// reset the grid
-	lib.ApplyMatrix(g.g, func(p pos) pos {
+	g.g.Apply(func(p pos) pos {
 		return pos{
 			val:     p.val,
 			visited: false,
@@ -191,37 +192,9 @@ func (g *grid) reset(h, d coord) {
 	g.hatDir = d
 }
 
-type coord struct {
-	Y, X int
-}
-
-func quarterTurn(c coord, clockwise bool) coord {
-	// y' = x sin θ + y cos θ
-	// x' = x cos θ − y sin θ
-	// cos 90/270 = 0, sin 90 = 1, sin 270 = -1
-	if clockwise {
-		return coord{
-			Y: c.X,
-			X: c.Y * -1,
-		}
-	}
-
-	return coord{
-		Y: c.X * -1,
-		X: c.Y,
-	}
-}
-
-func addCoords(c, d coord) coord {
-	return coord{
-		Y: c.Y + d.Y,
-		X: c.X + d.X,
-	}
-}
-
 type node struct {
-	c coord
-	d coord
+	c lib.Vec
+	d lib.Vec
 }
 
 type pos struct {

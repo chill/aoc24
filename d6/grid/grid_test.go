@@ -18,12 +18,12 @@ func TestParseGrid(t *testing.T) {
 #.........
 ......#...`
 
-	expectHat := coord{
+	expectHat := lib.Vec{
 		Y: 6,
 		X: 4,
 	}
 
-	expectBlocks := lib.NewSet([]coord{
+	expectBlocks := lib.NewSet([]lib.Vec{
 		{Y: 0, X: 4},
 		{Y: 1, X: 9},
 		{Y: 3, X: 2},

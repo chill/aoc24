@@ -14,17 +14,17 @@ func main() {
 	fmt.Printf("got %d occurences of XMAS, %d occurences of X-MAS\n", words, crosses)
 }
 
-func xmasSearch(matrix [][]rune) int {
+func xmasSearch(matrix lib.Matrix[rune]) int {
 	return searchByChar(matrix, 'X', checkXmas)
 }
 
-func crossSearch(matrix [][]rune) int {
+func crossSearch(matrix lib.Matrix[rune]) int {
 	return searchByChar(matrix, 'A', checkCross)
 }
 
-type checkFunc func(y, x int, matrix [][]rune) int
+type checkFunc func(y, x int, matrix lib.Matrix[rune]) int
 
-func searchByChar(matrix [][]rune, target rune, check checkFunc) int {
+func searchByChar(matrix lib.Matrix[rune], target rune, check checkFunc) int {
 	var count int
 	for y := 0; y < len(matrix); y++ {
 		row := matrix[y]
@@ -39,7 +39,7 @@ func searchByChar(matrix [][]rune, target rune, check checkFunc) int {
 	return count
 }
 
-func checkCross(y, x int, matrix [][]rune) int {
+func checkCross(y, x int, matrix lib.Matrix[rune]) int {
 	// from an A, we only need to check 4 positions, 2 types of slash
 	// backslash: 1,-1 and -1,1
 	// forward slash: 1,1 and -1,-1
@@ -53,7 +53,7 @@ func checkCross(y, x int, matrix [][]rune) int {
 			newY := y + diffY
 			newX := x + diffX
 
-			if !lib.InBounds(newY, newX, matrix) {
+			if !matrix.InBounds(newY, newX) {
 				return 0
 			}
 
@@ -99,7 +99,7 @@ func checkCross(y, x int, matrix [][]rune) int {
 
 var searchXmas = []rune{'M', 'A', 'S'}
 
-func checkXmas(y, x int, matrix [][]rune) int {
+func checkXmas(y, x int, matrix lib.Matrix[rune]) int {
 	var count int
 	for diffY := -1; diffY < 2; diffY++ {
 		for diffX := -1; diffX < 2; diffX++ {
@@ -112,11 +112,11 @@ func checkXmas(y, x int, matrix [][]rune) int {
 	return count
 }
 
-func checkLine(y, x, diffY, diffX int, matrix [][]rune, target []rune) bool {
+func checkLine(y, x, diffY, diffX int, matrix lib.Matrix[rune], target []rune) bool {
 	for i, r := range target {
 		newY := y + diffY*(i+1)
 		newX := x + diffX*(i+1)
-		if !lib.InBounds(newY, newX, matrix) {
+		if !matrix.InBounds(newY, newX) {
 			return false
 		}
 

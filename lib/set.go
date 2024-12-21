@@ -20,6 +20,16 @@ func (s Set[V]) Add(vals ...V) {
 	}
 }
 
+func (s Set[V]) AddIter(i iter.Seq[V]) {
+	for v := range i {
+		s.Add(v)
+	}
+}
+
+func (s Set[V]) Merge(o Set[V]) {
+	s.AddIter(o.Values())
+}
+
 func (s Set[V]) Contains(vals ...V) bool {
 	contained := true
 	for _, v := range vals {

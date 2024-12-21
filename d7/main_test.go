@@ -32,10 +32,15 @@ func TestValidTotal(t *testing.T) {
 192: 17 8 14
 21037: 9 7 18 13
 292: 11 6 16 20`
-		expect = 3749
+		expect       = 3749
+		expectConcat = 11387
 	)
 
 	if res := validTotal(lib.StringLines(in)); res != expect {
 		t.Errorf("expected %d got %d", expect, res)
+	}
+
+	if res := validConcatTotal(lib.StringLines(in)); res != expectConcat {
+		t.Errorf("expected %d got %d", expectConcat, res)
 	}
 }

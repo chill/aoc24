@@ -21,10 +21,15 @@ func TestCalc(t *testing.T) {
 ............
 ............`
 
-		expect = 14
+		expectP1 = 14
+		expectP2 = 34
 	)
 
-	if res := calc(lib.StringLines(in)); res != expect {
-		t.Errorf("expected %d got %d", expect, res)
+	if res := calc(lib.StringLines(in), false); res != expectP1 {
+		t.Errorf("expected %d got %d", expectP1, res)
+	}
+
+	if res := calc(lib.StringLines(in), true); res != expectP2 {
+		t.Errorf("expected %d got %d", expectP2, res)
 	}
 }

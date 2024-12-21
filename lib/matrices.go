@@ -8,6 +8,10 @@ func (m Matrix[V]) InBounds(y, x int) bool {
 	return InBounds(y, x, len(m), len(m[0]))
 }
 
+func (m Matrix[V]) InBoundsVec(v Vec) bool {
+	return InBounds(v.Y, v.X, len(m), len(m[0]))
+}
+
 func InBounds(y, x, lenY, lenX int) bool {
 	return y >= 0 && x >= 0 && y < lenY && x < lenX
 }
@@ -27,6 +31,10 @@ func (m Matrix[V]) Apply(fn func(V) V) {
 			r[i] = fn(v)
 		}
 	}
+}
+
+func (m Matrix[V]) At(v Vec) V {
+	return m[v.Y][v.X]
 }
 
 type Vec struct {
@@ -68,5 +76,23 @@ func (v Vec) Invert() Vec {
 	return Vec{
 		Y: -v.Y,
 		X: -v.X,
+	}
+}
+
+func UDLR() []Vec {
+	return []Vec{
+		{Y: -1, X: 0},
+		{Y: 1, X: 0},
+		{Y: 0, X: -1},
+		{Y: 0, X: 1},
+	}
+}
+
+func Diags() []Vec {
+	return []Vec{
+		{Y: -1, X: -1},
+		{Y: -1, X: 1},
+		{Y: 1, X: 1},
+		{Y: 1, X: -1},
 	}
 }
